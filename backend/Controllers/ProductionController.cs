@@ -1,89 +1,86 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OilGasApi.Auth;
 using OilGasApi.Data;
-using OilGasApi.Dtos;
 using OilGasApi.Models;
 
 namespace OilGasApi.Controllers;
 
-/// <summary>CRUD национальной добычи. Чтение открыто всем, изменение только admin.</summary>
+/// <summary>CRUD национальной добычи. Читать могут все, изменять только admin.</summary>
 [ApiController]
 [Route("api/production")]
-public class ProductionController(AppDbContext db) : ControllerBase
+public class ProductionController : ControllerBase
 {
-    // GET api/production?from=2020-01-01&to=2020-12-01&minOil=1000
+    private readonly AppDbContext _db;
+
+    public ProductionController(AppDbContext db)
+    {
+        _db = db;
+    }
+
+    // GET api/production?from=2020-01-01&to=2020-12-01  (from и to необязательные)
     [HttpGet]
-    public async Task<IActionResult> GetAll(DateOnly? from, DateOnly? to, double? minOil)
+    public IActionResult GetAll(DateOnly? from, DateOnly? to)
     {
-        var query = db.Productions.AsQueryable();
-        if (from is not null) query = query.Where(p => p.Date >= from);
-        if (to is not null) query = query.Where(p => p.Date <= to);
-        if (minOil is not null) query = query.Where(p => p.OilTotal >= minOil);
-
-        var list = await query.OrderBy(p => p.Date).ToListAsync();
-        return Ok(list.Select(ToView));
+        var productions = _db.Productions
+            .Where(p => (from == null || p.Date >= from) && (to == null || p.Date <= to))
+            .OrderBy(p => p.Date)
+            .ToList();
+        return Ok(productions);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    // GET api/production/5
+    [HttpGet("{id}")]
+    public IActionResult GetById(int id)
     {
-        var p = await db.Productions.FindAsync(id);
-        return p is null ? NotFound() : Ok(ToView(p));
+        var production = _db.Productions.Find(id);
+        if (production == null)
+            return NotFound();
+        return Ok(production);
     }
 
-    [Authorize(Roles = Roles.Admin)]
+    // POST api/production
+    [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<IActionResult> Create(ProductionDto dto)
+    public IActionResult Create(Production production)
     {
-        var p = new Production();
-        dto.ApplyTo(p);
-        if (await db.Productions.AnyAsync(x => x.Date == p.Date))
-            return Conflict(new { message = $"Запись за {p.Date:yyyy-MM} уже существует" });
+        if (_db.Productions.Any(p => p.Date == production.Date))
+            return Conflict(new { message = $"Запись за {production.Date} уже существует" });
 
-        db.Productions.Add(p);
-        await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = p.Id }, ToView(p));
+        production.Id = 0; // Id назначает база данных, а не клиент
+        production.RecalculateTotals();
+        _db.Productions.Add(production);
+        _db.SaveChanges();
+        return CreatedAtAction(nameof(GetById), new { id = production.Id }, production);
     }
 
-    [Authorize(Roles = Roles.Admin)]
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, ProductionDto dto)
+    // PUT api/production/5
+    [Authorize(Roles = "admin")]
+    [HttpPut("{id}")]
+    public IActionResult Update(int id, Production production)
     {
-        var p = await db.Productions.FindAsync(id);
-        if (p is null) return NotFound();
+        if (!_db.Productions.Any(p => p.Id == id))
+            return NotFound();
+        if (_db.Productions.Any(p => p.Date == production.Date && p.Id != id))
+            return Conflict(new { message = $"Запись за {production.Date} уже существует" });
 
-        dto.ApplyTo(p);
-        if (await db.Productions.AnyAsync(x => x.Date == p.Date && x.Id != id))
-            return Conflict(new { message = $"Запись за {p.Date:yyyy-MM} уже существует" });
-
-        await db.SaveChangesAsync();
-        return Ok(ToView(p));
+        production.Id = id;
+        production.RecalculateTotals();
+        _db.Productions.Update(production);
+        _db.SaveChanges();
+        return Ok(production);
     }
 
-    [Authorize(Roles = Roles.Admin)]
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    // DELETE api/production/5
+    [Authorize(Roles = "admin")]
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
     {
-        var p = await db.Productions.FindAsync(id);
-        if (p is null) return NotFound();
-        db.Productions.Remove(p);
-        await db.SaveChangesAsync();
+        var production = _db.Productions.Find(id);
+        if (production == null)
+            return NotFound();
+
+        _db.Productions.Remove(production);
+        _db.SaveChanges();
         return NoContent();
     }
-
-    /// <summary>Ответ API: данные + вычисляемые поля из бизнес-логики модели.</summary>
-    private static object ToView(Production p) => new
-    {
-        p.Id,
-        p.Date,
-        p.OilConventional, p.OilShale, p.OilTight, p.OilTotal,
-        p.GasConventional, p.GasShale, p.GasTight, p.GasTotal,
-        OilUnconventional = p.OilUnconventional(),
-        GasUnconventional = p.GasUnconventional(),
-        OilUnconventionalSharePercent = p.OilUnconventionalSharePercent(),
-        GasUnconventionalSharePercent = p.GasUnconventionalSharePercent(),
-        IsConsistent = p.IsConsistent()
-    };
 }

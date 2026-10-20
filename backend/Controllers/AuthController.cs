@@ -1,38 +1,47 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OilGasApi.Auth;
-using OilGasApi.Dtos;
+using OilGasApi.Models;
 
 namespace OilGasApi.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IConfiguration config, TokenService tokens) : ControllerBase
+public class AuthController : ControllerBase
 {
-    /// <summary>Вход: возвращает JWT-токен с ролью пользователя.</summary>
-    [HttpPost("login")]
-    public IActionResult Login(LoginDto dto)
+    // Учебные пользователи. Пароли открытым текстом допустимы только в лабораторной работе.
+    private static readonly List<User> Users = new List<User>
     {
-        var users = config.GetSection("DemoUsers").Get<List<DemoUser>>() ?? [];
+        new User { Username = "admin", Password = "admin123", Role = "admin" },
+        new User { Username = "user", Password = "user123", Role = "user" }
+    };
 
-        var user = users
-            .Where(u => u.Username == dto.Username && u.Password == dto.Password)
-            .Select(u => new { u.Username, u.Role })
-            .FirstOrDefault();
-
-        if (user is null)
-            return Unauthorized(new { message = "Неверный логин или пароль" });
-
-        var (token, expiresAt) = tokens.Create(user.Username, user.Role);
-        return Ok(new { token, expiresAt, username = user.Username, role = user.Role });
+    public class LoginData
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
     }
 
-    /// <summary>Кто я: удобно проверять, что токен работает.</summary>
+    // POST api/auth/login  { "username": "admin", "password": "admin123" }
+    [HttpPost("login")]
+    public IActionResult Login(LoginData loginData)
+    {
+        var user = Users.FirstOrDefault(u => u.Username == loginData.Username && u.Password == loginData.Password);
+        if (user == null)
+            return Unauthorized(new { message = "Неверный логин или пароль" });
+
+        var token = AuthOptions.GenerateToken(user.Username, user.Role);
+        return Ok(new { token, username = user.Username, role = user.Role });
+    }
+
+    // GET api/auth/me: кто я. Удобно проверить, что токен работает.
     [Authorize]
     [HttpGet("me")]
-    public IActionResult Me() => Ok(new
+    public IActionResult Me()
     {
-        username = User.Identity?.Name,
-        role = User.IsInRole(Roles.Admin) ? Roles.Admin : Roles.User
-    });
+        var username = User.Identity?.Name;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        return Ok(new { username, role });
+    }
 }

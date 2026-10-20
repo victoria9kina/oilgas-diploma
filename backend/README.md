@@ -1,83 +1,64 @@
 # OilGasApi: серверная часть (лаба 2)
 
-Web API на ASP.NET Core (.NET 10) по данным **Argentina Oil and Gas Dataset** (Kaggle).
-Часть дипломного проекта «Прогнозирование и геовизуализация показателей добычи нефти и газа».
+Web API на ASP.NET Core (.NET 10) по данным **Argentina Oil and Gas Dataset** (Kaggle, `pedronaon/argentina-oil-and-gas-dataset`).
+Часть дипломного проекта «Разработка автоматизированной системы прогнозирования и геовизуализации показателей добычи нефти и газа».
 
-## Что внутри
+## Структура
 
 | Папка | Содержимое |
 |---|---|
-| `Models/` | 3 класса с бизнес-логикой: `Production`, `BasinProduction`, `DrillingActivity` + справочник `Basins` (координаты бассейнов) |
-| `Controllers/` | CRUD для каждой сущности, 5 сводных отчётов, авторизация |
-| `Services/ReportService.cs` | Запросы на объединение данных (LINQ: `Where`, `Select`, `Join`, `GroupJoin`, `GroupBy`) |
-| `Data/` | `AppDbContext` (EF Core + SQLite), разбор CSV, первичная загрузка |
-| `Dtos/` | Входные модели с валидацией |
-| `Auth/` | JWT-токены, роли `admin` / `user` |
-| `postman/` | Коллекция Postman: 34 запроса с автотестами |
-
-### Модель данных
+| `Models/` | `Production`, `BasinProduction`, `DrillingActivity` (данные + бизнес-логика), справочник `Basins`, `Percent`, `User` |
+| `Controllers/` | CRUD для трёх сущностей, 3 сводных отчёта, вход |
+| `Data/` | `AppDbContext` (EF Core + SQLite), загрузка CSV в БД при первом запуске |
+| `Auth/` | `AuthOptions`: параметры и выдача JWT-токена |
+| `postman/` | Коллекция Postman (33 запроса с проверкой статуса) |
 
 Одна строка CSV (месяц) раскладывается на три сущности:
 
-- **Production**: национальная добыча нефти и газа (`petroleo_*`, `gas_*`).
-  Методы: доля нетрадиционной добычи, пересчёт итогов, проверка согласованности, прирост.
-- **BasinProduction**: добыча по бассейну (колонки `cuenca_*` развёрнуты в формат «дата / бассейн / значение»).
-  Методы: доля бассейна, изменение к прошлому периоду, признак доминирующего бассейна, справка с координатами.
-- **DrillingActivity**: цена Brent, метры бурения, законченные и активные скважины.
-  Методы: проходка на скважину, категория цены (Low / Medium / High), наличие бурения.
+- **Production**: национальная добыча нефти и газа (традиционная, сланцевая, tight, итог), доля нетрадиционной добычи.
+- **BasinProduction**: добыча нефти по бассейну за месяц, доля бассейна.
+- **DrillingActivity**: цена Brent, метры бурения, скважины, проходка на скважину, категория цены (Low / Medium / High).
 
-### Права доступа
+## Права доступа
 
 | Действие | Без токена | `user` | `admin` |
 |---|---|---|---|
-| GET данных (`/api/production`, `/api/basins`, `/api/drilling`) | да | да | да |
-| Сводные отчёты (`/api/reports/*`) | **401** | да | да |
+| GET `/api/production`, `/api/basins`, `/api/drilling` | да | да | да |
+| Сводные отчёты `/api/reports/*` | **401** | да | да |
 | POST / PUT / DELETE | **401** | **403** | да |
 
-Демо-пользователи (в `appsettings.json`): `admin / admin123`, `user / user123`.
+Пользователи: `admin / admin123`, `user / user123`. Вход: `POST /api/auth/login` с телом `{ "username": "...", "password": "..." }`, в ответе токен. Токен передаётся в заголовке `Authorization: Bearer <токен>`.
 
-### Сводные отчёты (объединение классов)
+## Запросы
 
-| Запрос | Что объединяет |
+| Запрос | Что делает |
 |---|---|
-| `GET /api/reports/monthly-summary?from=&to=` | Production + DrillingActivity по месяцу |
-| `GET /api/reports/basin-shares?date=2023-06-01` | BasinProduction + Production + справочник бассейнов |
-| `GET /api/reports/yearly` | Годовые группы Production + DrillingActivity, прирост год к году |
-| `GET /api/reports/price-impact` | Production + DrillingActivity, сгруппировано по категории цены Brent |
-| `GET /api/reports/top-basins?year=2023` | Рейтинг бассейнов за год с координатами (основа для карты) |
+| `GET /api/production?from=&to=` | национальная добыча за период |
+| `GET /api/basins?basin=&from=&to=` | добыча по бассейнам |
+| `GET /api/basins/info` | справочник бассейнов с координатами |
+| `GET /api/drilling?from=&to=&priceCategory=` | бурение и цена Brent |
+| `GET/POST/PUT/DELETE /api/{production,basins,drilling}/{id}` | CRUD |
+| `GET /api/reports/monthly-summary?from=&to=` | Production + DrillingActivity по месяцам |
+| `GET /api/reports/basin-shares?date=2023-06-01` | доли бассейнов за месяц + национальная добыча нефти |
+| `GET /api/reports/top-basins?year=2023` | рейтинг бассейнов за год с координатами |
 
-## Запуск на macOS
+Даты передаются в формате `yyyy-MM-dd`, месяц обозначается первым числом.
 
-1. Установить **.NET 10 SDK**: https://dotnet.microsoft.com/download (pkg-установщик для macOS, для M-чипов выбрать Arm64).
-   Проверка: `dotnet --version`.
-2. В VS Code поставить расширение **C# Dev Kit**.
-3. Скачать датасет с Kaggle (pedronaon/argentina-oil-and-gas-dataset), положить CSV в `Data/` и назвать `argentina_oil_gas.csv`.
-4. В терминале в папке проекта:
-   ```bash
-   dotnet restore
-   dotnet run
-   ```
-   API поднимется на `http://localhost:5080`. При первом запуске создастся `oilgas.db` и загрузятся данные из CSV
-   (в логе будет строка «Импортировано: ...»).
-5. Postman: Import → `postman/OilGasApi.postman_collection.json`. Сначала выполнить папку **1. Auth**
-   (токены сохранятся в переменные коллекции), потом остальное. Либо Run collection целиком.
-
-Чтобы перезагрузить данные из CSV, удали `oilgas.db` и запусти заново.
-
-## Релиз-версия
+## Запуск
 
 ```bash
-dotnet publish -c Release -o publish
-cd publish
-dotnet OilGasApi.dll --urls http://localhost:5080
+dotnet run
 ```
 
-CSV из `Data/` копируется в релиз автоматически.
+API работает на `http://localhost:5080`. При первом запуске создаётся `oilgas.db` и загружаются 203 месяца из CSV. Чтобы загрузить данные заново, удалить `oilgas.db`.
 
-## Релиз на GitHub
+Postman: Import → `postman/OilGasApi.postman_collection.json` → Run collection.
+
+## Релиз
 
 ```bash
-git tag v1.0
-git push origin v1.0
+dotnet publish -c Release -r osx-arm64 --self-contained true -o publish
+./publish/OilGasApi --urls http://localhost:5080
 ```
-Затем на GitHub: Releases → Draft a new release → выбрать тег `v1.0` → приложить архив папки `publish`.
+
+Self-contained релиз запускается без установленного .NET (macOS на Apple Silicon).

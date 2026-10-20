@@ -1,92 +1,90 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OilGasApi.Auth;
 using OilGasApi.Data;
-using OilGasApi.Dtos;
 using OilGasApi.Models;
 
 namespace OilGasApi.Controllers;
 
-/// <summary>CRUD буровой активности и цены Brent.</summary>
+/// <summary>CRUD буровой активности и цены Brent. Читать могут все, изменять только admin.</summary>
 [ApiController]
 [Route("api/drilling")]
-public class DrillingController(AppDbContext db) : ControllerBase
+public class DrillingController : ControllerBase
 {
-    // GET api/drilling?from=2020-01-01&to=2020-12-01&priceCategory=High
+    private readonly AppDbContext _db;
+
+    public DrillingController(AppDbContext db)
+    {
+        _db = db;
+    }
+
+    // GET api/drilling?from=2020-01-01&to=2020-12-01&priceCategory=High  (все параметры необязательные)
     [HttpGet]
-    public async Task<IActionResult> GetAll(DateOnly? from, DateOnly? to, string? priceCategory)
+    public IActionResult GetAll(DateOnly? from, DateOnly? to, string? priceCategory)
     {
-        var query = db.DrillingActivities.AsQueryable();
-        if (from is not null) query = query.Where(d => d.Date >= from);
-        if (to is not null) query = query.Where(d => d.Date <= to);
+        var drillings = _db.DrillingActivities
+            .Where(d => (from == null || d.Date >= from) && (to == null || d.Date <= to))
+            .OrderBy(d => d.Date)
+            .ToList();
 
-        var list = await query.OrderBy(d => d.Date).ToListAsync();
+        // PriceCategory вычисляется в C#, в таблице такой колонки нет и SQL о ней не знает.
+        // Поэтому фильтруем уже загруженный список.
+        if (priceCategory != null)
+            drillings = drillings.Where(d => d.PriceCategory == priceCategory).ToList();
 
-        // Категория цены считается методом модели, поэтому фильтруем уже в памяти (LINQ to Objects)
-        if (!string.IsNullOrWhiteSpace(priceCategory))
-            list = list.Where(d => d.PriceCategory().Equals(priceCategory, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        return Ok(list.Select(ToView));
+        return Ok(drillings);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    // GET api/drilling/5
+    [HttpGet("{id}")]
+    public IActionResult GetById(int id)
     {
-        var d = await db.DrillingActivities.FindAsync(id);
-        return d is null ? NotFound() : Ok(ToView(d));
+        var drilling = _db.DrillingActivities.Find(id);
+        if (drilling == null)
+            return NotFound();
+        return Ok(drilling);
     }
 
-    [Authorize(Roles = Roles.Admin)]
+    // POST api/drilling
+    [Authorize(Roles = "admin")]
     [HttpPost]
-    public async Task<IActionResult> Create(DrillingActivityDto dto)
+    public IActionResult Create(DrillingActivity drilling)
     {
-        var d = new DrillingActivity();
-        dto.ApplyTo(d);
-        if (await db.DrillingActivities.AnyAsync(x => x.Date == d.Date))
-            return Conflict(new { message = $"Запись за {d.Date:yyyy-MM} уже существует" });
+        if (_db.DrillingActivities.Any(d => d.Date == drilling.Date))
+            return Conflict(new { message = $"Запись за {drilling.Date} уже существует" });
 
-        db.DrillingActivities.Add(d);
-        await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = d.Id }, ToView(d));
+        drilling.Id = 0; // Id назначает база данных, а не клиент
+        _db.DrillingActivities.Add(drilling);
+        _db.SaveChanges();
+        return CreatedAtAction(nameof(GetById), new { id = drilling.Id }, drilling);
     }
 
-    [Authorize(Roles = Roles.Admin)]
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, DrillingActivityDto dto)
+    // PUT api/drilling/5
+    [Authorize(Roles = "admin")]
+    [HttpPut("{id}")]
+    public IActionResult Update(int id, DrillingActivity drilling)
     {
-        var d = await db.DrillingActivities.FindAsync(id);
-        if (d is null) return NotFound();
+        if (!_db.DrillingActivities.Any(d => d.Id == id))
+            return NotFound();
+        if (_db.DrillingActivities.Any(d => d.Date == drilling.Date && d.Id != id))
+            return Conflict(new { message = $"Запись за {drilling.Date} уже существует" });
 
-        dto.ApplyTo(d);
-        if (await db.DrillingActivities.AnyAsync(x => x.Date == d.Date && x.Id != id))
-            return Conflict(new { message = $"Запись за {d.Date:yyyy-MM} уже существует" });
-
-        await db.SaveChangesAsync();
-        return Ok(ToView(d));
+        drilling.Id = id;
+        _db.DrillingActivities.Update(drilling);
+        _db.SaveChanges();
+        return Ok(drilling);
     }
 
-    [Authorize(Roles = Roles.Admin)]
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    // DELETE api/drilling/5
+    [Authorize(Roles = "admin")]
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
     {
-        var d = await db.DrillingActivities.FindAsync(id);
-        if (d is null) return NotFound();
-        db.DrillingActivities.Remove(d);
-        await db.SaveChangesAsync();
+        var drilling = _db.DrillingActivities.Find(id);
+        if (drilling == null)
+            return NotFound();
+
+        _db.DrillingActivities.Remove(drilling);
+        _db.SaveChanges();
         return NoContent();
     }
-
-    private static object ToView(DrillingActivity d) => new
-    {
-        d.Id,
-        d.Date,
-        d.BrentPrice,
-        d.MetersDrilled,
-        d.WellsCompleted,
-        d.ActiveUnconventionalWells,
-        MetersPerWell = d.MetersPerWell(),
-        PriceCategory = d.PriceCategory(),
-        HasDrilling = d.HasDrilling()
-    };
 }

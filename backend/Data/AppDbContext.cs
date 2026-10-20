@@ -3,11 +3,18 @@ using OilGasApi.Models;
 
 namespace OilGasApi.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+/// <summary>Связь с базой данных: каждый DbSet это таблица.</summary>
+public class AppDbContext : DbContext
 {
+    // Set<T>() возвращает таблицу для класса T. Запись через "=>" нужна, чтобы компилятор
+    // не предупреждал, что свойство может быть null (таблицы создаёт сам EF).
     public DbSet<Production> Productions => Set<Production>();
     public DbSet<BasinProduction> BasinProductions => Set<BasinProduction>();
     public DbSet<DrillingActivity> DrillingActivities => Set<DrillingActivity>();
+
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,6 +24,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         // Для бассейна уникальна пара (месяц, бассейн)
         modelBuilder.Entity<BasinProduction>().HasIndex(b => new { b.Date, b.Basin }).IsUnique();
-        modelBuilder.Entity<BasinProduction>().Property(b => b.Basin).HasMaxLength(20);
     }
 }

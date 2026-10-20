@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "OilGasApi: Лаба 2",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Порядок: 1) Auth (сохраняет токены), 2) остальные папки. Можно запустить всё через Run collection."
+    "name": "OilGasApi",
+    "description": "Лаба 2: Web API добычи нефти и газа Аргентины. Сначала выполнить папку 1 (токены сохранятся в переменные), потом остальные по порядку или Run collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
@@ -32,10 +32,10 @@
   ],
   "item": [
     {
-      "name": "1. Auth",
+      "name": "1. Авторизация",
       "item": [
         {
-          "name": "Login admin",
+          "name": "Вход admin",
           "request": {
             "method": "POST",
             "header": [
@@ -69,15 +69,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set('adminToken', pm.response.json().token);"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"adminToken\", pm.response.json().token);"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Login user",
+          "name": "Вход user",
           "request": {
             "method": "POST",
             "header": [
@@ -111,15 +111,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set('userToken', pm.response.json().token);"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"userToken\", pm.response.json().token);"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Login: неверный пароль → 401",
+          "name": "Неверный пароль → 401",
           "request": {
             "method": "POST",
             "header": [
@@ -153,55 +153,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 401', () => pm.response.to.have.status(401));"
+                  "pm.test(\"Статус 401\", () => pm.response.to.have.status(401));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Login: пустые поля → 400 (валидация)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"\",\n  \"password\": \"\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Статус 400', () => pm.response.to.have.status(400));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Me (user)",
+          "name": "Кто я (user)",
           "request": {
             "method": "GET",
             "header": [],
@@ -233,7 +192,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -269,7 +228,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -310,14 +269,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Создать (admin)",
+          "name": "Создать (admin) → 201",
           "request": {
             "method": "POST",
             "header": [
@@ -348,7 +307,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 50,\n  \"oilShale\": 30,\n  \"oilTight\": 2,\n  \"gasConventional\": 60,\n  \"gasShale\": 40,\n  \"gasTight\": 10\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 1000,\n  \"oilShale\": 500,\n  \"oilTight\": 100,\n  \"gasConventional\": 2000,\n  \"gasShale\": 800,\n  \"gasTight\": 300\n}"
             }
           },
           "event": [
@@ -357,8 +316,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('productionId', pm.response.json().id);"
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"productionId\", pm.response.json().id);"
                 ]
               }
             }
@@ -390,7 +349,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -429,7 +388,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 50,\n  \"oilShale\": 35,\n  \"oilTight\": 2,\n  \"gasConventional\": 60,\n  \"gasShale\": 40,\n  \"gasTight\": 10\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 1000,\n  \"oilShale\": 700,\n  \"oilTight\": 100,\n  \"gasConventional\": 2000,\n  \"gasShale\": 800,\n  \"gasTight\": 300\n}"
             }
           },
           "event": [
@@ -438,14 +397,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Дубликат месяца → 409",
+          "name": "Тот же месяц ещё раз → 409",
           "request": {
             "method": "POST",
             "header": [
@@ -476,7 +435,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 50,\n  \"oilShale\": 30,\n  \"oilTight\": 2,\n  \"gasConventional\": 60,\n  \"gasShale\": 40,\n  \"gasTight\": 10\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 1000,\n  \"oilShale\": 500,\n  \"oilTight\": 100,\n  \"gasConventional\": 2000,\n  \"gasShale\": 800,\n  \"gasTight\": 300\n}"
             }
           },
           "event": [
@@ -485,14 +444,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 409', () => pm.response.to.have.status(409));"
+                  "pm.test(\"Статус 409\", () => pm.response.to.have.status(409));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Невалидные данные → 400",
+          "name": "Отрицательная добыча → 400",
           "request": {
             "method": "POST",
             "header": [
@@ -523,7 +482,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 50,\n  \"oilShale\": -5,\n  \"oilTight\": 2,\n  \"gasConventional\": 60,\n  \"gasShale\": 40,\n  \"gasTight\": 10\n}"
+              "raw": "{\n  \"date\": \"2031-01-01\",\n  \"oilConventional\": 1000,\n  \"oilShale\": -1,\n  \"oilTight\": 100,\n  \"gasConventional\": 2000,\n  \"gasShale\": 800,\n  \"gasTight\": 300\n}"
             }
           },
           "event": [
@@ -532,14 +491,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 400', () => pm.response.to.have.status(400));"
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Удалить (admin)",
+          "name": "Удалить (admin) → 204",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -571,7 +530,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 204', () => pm.response.to.have.status(204));"
+                  "pm.test(\"Статус 204\", () => pm.response.to.have.status(204));"
                 ]
               }
             }
@@ -603,7 +562,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 404', () => pm.response.to.have.status(404));"
+                  "pm.test(\"Статус 404\", () => pm.response.to.have.status(404));"
                 ]
               }
             }
@@ -612,10 +571,10 @@
       ]
     },
     {
-      "name": "3. Basins (CRUD)",
+      "name": "3. Бассейны (CRUD)",
       "item": [
         {
-          "name": "Справочник бассейнов (координаты)",
+          "name": "Справочник бассейнов",
           "request": {
             "method": "GET",
             "header": [],
@@ -640,7 +599,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -685,14 +644,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Создать (admin)",
+          "name": "Создать (admin) → 201",
           "request": {
             "method": "POST",
             "header": [
@@ -723,7 +682,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"neuquina\",\n  \"value\": 55.5\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"neuquina\",\n  \"value\": 1500\n}"
             }
           },
           "event": [
@@ -732,8 +691,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('basinId', pm.response.json().id);"
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"basinId\", pm.response.json().id);"
                 ]
               }
             }
@@ -772,7 +731,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"neuquina\",\n  \"value\": 60\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"neuquina\",\n  \"value\": 1700\n}"
             }
           },
           "event": [
@@ -781,7 +740,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -819,7 +778,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"mars\",\n  \"value\": 55.5\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"mars\",\n  \"value\": 1500\n}"
             }
           },
           "event": [
@@ -828,14 +787,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 400', () => pm.response.to.have.status(400));"
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Удалить (admin)",
+          "name": "Удалить (admin) → 204",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -867,7 +826,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 204', () => pm.response.to.have.status(204));"
+                  "pm.test(\"Статус 204\", () => pm.response.to.have.status(204));"
                 ]
               }
             }
@@ -876,7 +835,7 @@
       ]
     },
     {
-      "name": "4. Drilling (CRUD)",
+      "name": "4. Бурение (CRUD)",
       "item": [
         {
           "name": "Все месяцы",
@@ -903,7 +862,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -940,14 +899,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Создать (admin)",
+          "name": "Создать (admin) → 201",
           "request": {
             "method": "POST",
             "header": [
@@ -978,7 +937,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"brentPrice\": 72.5,\n  \"metersDrilled\": 150000,\n  \"wellsCompleted\": 60,\n  \"activeUnconventionalWells\": 1300\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"brentPrice\": 85,\n  \"metersDrilled\": 120000,\n  \"wellsCompleted\": 30,\n  \"activeUnconventionalWells\": 100\n}"
             }
           },
           "event": [
@@ -987,8 +946,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('drillingId', pm.response.json().id);"
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"drillingId\", pm.response.json().id);"
                 ]
               }
             }
@@ -1027,7 +986,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"brentPrice\": 45,\n  \"metersDrilled\": 150000,\n  \"wellsCompleted\": 60,\n  \"activeUnconventionalWells\": 1300\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"brentPrice\": 45,\n  \"metersDrilled\": 120000,\n  \"wellsCompleted\": 30,\n  \"activeUnconventionalWells\": 100\n}"
             }
           },
           "event": [
@@ -1036,14 +995,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Удалить (admin)",
+          "name": "Удалить (admin) → 204",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1075,7 +1034,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 204', () => pm.response.to.have.status(204));"
+                  "pm.test(\"Статус 204\", () => pm.response.to.have.status(204));"
                 ]
               }
             }
@@ -1084,10 +1043,10 @@
       ]
     },
     {
-      "name": "5. Reports (объединение данных, нужен токен)",
+      "name": "5. Сводные отчёты (нужен токен)",
       "item": [
         {
-          "name": "Помесячно: добыча + бурение",
+          "name": "Добыча + бурение по месяцам",
           "request": {
             "method": "GET",
             "header": [],
@@ -1129,7 +1088,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1174,85 +1133,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Годовая сводка",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/reports/yearly",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "yearly"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{userToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Влияние цены Brent",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/reports/price-impact",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "price-impact"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{userToken}}",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1297,7 +1178,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 200', () => pm.response.to.have.status(200));"
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1306,7 +1187,7 @@
       ]
     },
     {
-      "name": "6. Демонстрация 401 и 403",
+      "name": "6. Разница 401 и 403",
       "item": [
         {
           "name": "Отчёт без токена → 401",
@@ -1314,14 +1195,20 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/reports/yearly",
+              "raw": "{{baseUrl}}/api/reports/top-basins?year=2023",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "reports",
-                "yearly"
+                "top-basins"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2023"
+                }
               ]
             },
             "auth": {
@@ -1334,14 +1221,104 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 401', () => pm.response.to.have.status(401));"
+                  "pm.test(\"Статус 401\", () => pm.response.to.have.status(401));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Создание без токена → 401",
+          "name": "Отчёт с токеном user → 200",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/top-basins?year=2023",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "top-basins"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2023"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Отчёт с токеном admin → 200",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/top-basins?year=2023",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "top-basins"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2023"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Добавление без токена → 401",
           "request": {
             "method": "POST",
             "header": [
@@ -1365,7 +1342,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 50,\n  \"oilShale\": 30,\n  \"oilTight\": 2,\n  \"gasConventional\": 60,\n  \"gasShale\": 40,\n  \"gasTight\": 10\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 1000,\n  \"oilShale\": 500,\n  \"oilTight\": 100,\n  \"gasConventional\": 2000,\n  \"gasShale\": 800,\n  \"gasTight\": 300\n}"
             }
           },
           "event": [
@@ -1374,14 +1351,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 401', () => pm.response.to.have.status(401));"
+                  "pm.test(\"Статус 401\", () => pm.response.to.have.status(401));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Создание с токеном user → 403",
+          "name": "Добавление с токеном user → 403",
           "request": {
             "method": "POST",
             "header": [
@@ -1412,7 +1389,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 50,\n  \"oilShale\": 30,\n  \"oilTight\": 2,\n  \"gasConventional\": 60,\n  \"gasShale\": 40,\n  \"gasTight\": 10\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilConventional\": 1000,\n  \"oilShale\": 500,\n  \"oilTight\": 100,\n  \"gasConventional\": 2000,\n  \"gasShale\": 800,\n  \"gasTight\": 300\n}"
             }
           },
           "event": [
@@ -1421,7 +1398,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 403', () => pm.response.to.have.status(403));"
+                  "pm.test(\"Статус 403\", () => pm.response.to.have.status(403));"
                 ]
               }
             }
@@ -1460,7 +1437,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Статус 403', () => pm.response.to.have.status(403));"
+                  "pm.test(\"Статус 403\", () => pm.response.to.have.status(403));"
                 ]
               }
             }

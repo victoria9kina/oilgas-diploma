@@ -1,40 +1,48 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace OilGasApi.Models;
 
-/// <summary>Буровая активность и цена нефти за месяц.</summary>
+/// <summary>Цена нефти Brent и буровая активность за месяц.</summary>
 public class DrillingActivity
 {
     public int Id { get; set; }
+
+    /// <summary>Месяц (первое число месяца).</summary>
     public DateOnly Date { get; set; }
 
-    /// <summary>Цена Brent, USD/баррель (precio_brent).</summary>
-    public double? BrentPrice { get; set; }
+    /// <summary>Цена Brent, долларов за баррель (precio_brent).</summary>
+    [Range(0, 500)] public double BrentPrice { get; set; }
 
     /// <summary>Пробурено метров (metros_perforados).</summary>
-    public double? MetersDrilled { get; set; }
+    [Range(0, double.MaxValue)] public double MetersDrilled { get; set; }
 
     /// <summary>Законченных скважин (pozos_terminados).</summary>
-    public int? WellsCompleted { get; set; }
+    [Range(0, int.MaxValue)] public int WellsCompleted { get; set; }
 
     /// <summary>Активных нетрадиционных скважин (pozos_no_conv_activos).</summary>
-    public int? ActiveUnconventionalWells { get; set; }
+    [Range(0, int.MaxValue)] public int ActiveUnconventionalWells { get; set; }
 
-    // ---------- Бизнес-логика ----------
-
-    /// <summary>Средняя проходка на одну законченную скважину, м.</summary>
-    public double? MetersPerWell() =>
-        MetersDrilled is not null && WellsCompleted is > 0
-            ? Math.Round(MetersDrilled.Value / WellsCompleted.Value, 1)
-            : null;
-
-    /// <summary>Категория цены: Low (&lt;50), Medium (50–80), High (&gt;=80), Unknown.</summary>
-    public string PriceCategory() => BrentPrice switch
+    /// <summary>Средняя глубина бурения на одну законченную скважину, м.</summary>
+    public double MetersPerWell
     {
-        null => "Unknown",
-        < 50 => "Low",
-        < 80 => "Medium",
-        _ => "High"
-    };
+        get
+        {
+            if (WellsCompleted == 0)
+                return 0;
+            return Math.Round(MetersDrilled / WellsCompleted, 1);
+        }
+    }
 
-    /// <summary>Есть ли в месяце буровая активность.</summary>
-    public bool HasDrilling() => WellsCompleted is > 0 || MetersDrilled is > 0;
+    /// <summary>Категория цены Brent: Low (меньше 50), Medium (50-80), High (80 и выше).</summary>
+    public string PriceCategory
+    {
+        get
+        {
+            if (BrentPrice < 50)
+                return "Low";
+            if (BrentPrice < 80)
+                return "Medium";
+            return "High";
+        }
+    }
 }
