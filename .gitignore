@@ -1,0 +1,12 @@
+bin/
+obj/
+publish/
+*.zip
+*.db
+*.db-shm
+*.db-wal
+.vs/
+.vscode/
+.DS_Store
+*.user
+РАЗБОР_ЛАБЫ_2.md
