@@ -10,3 +10,7 @@ publish/
 .DS_Store
 *.user
 РАЗБОР_ЛАБЫ_2.md
+# Служебные файлы синхронизации Postman (коллекция для сдачи: backend/postman/OilGasApi.postman_collection.json)
+backend/.postman/
+backend/postman/collections/
+backend/postman/globals/
