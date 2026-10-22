@@ -5,7 +5,6 @@ using OilGasApi.Models;
 
 namespace OilGasApi.Controllers;
 
-/// <summary>CRUD буровой активности и цены Brent. Читать могут все, изменять только admin.</summary>
 [ApiController]
 [Route("api/drilling")]
 public class DrillingController : ControllerBase
@@ -17,7 +16,6 @@ public class DrillingController : ControllerBase
         _db = db;
     }
 
-    // GET api/drilling?from=2020-01-01&to=2020-12-01&priceCategory=High  (все параметры необязательные)
     [HttpGet]
     public IActionResult GetAll(DateOnly? from, DateOnly? to, string? priceCategory)
     {
@@ -26,15 +24,13 @@ public class DrillingController : ControllerBase
             .OrderBy(d => d.Date)
             .ToList();
 
-        // PriceCategory вычисляется в C#, в таблице такой колонки нет и SQL о ней не знает.
-        // Поэтому фильтруем уже загруженный список.
+        // категории цены нет в таблице, поэтому фильтруем после ToList
         if (priceCategory != null)
             drillings = drillings.Where(d => d.PriceCategory == priceCategory).ToList();
 
         return Ok(drillings);
     }
 
-    // GET api/drilling/5
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
     {
@@ -44,7 +40,6 @@ public class DrillingController : ControllerBase
         return Ok(drilling);
     }
 
-    // POST api/drilling
     [Authorize(Roles = "admin")]
     [HttpPost]
     public IActionResult Create(DrillingActivity drilling)
@@ -52,13 +47,12 @@ public class DrillingController : ControllerBase
         if (_db.DrillingActivities.Any(d => d.Date == drilling.Date))
             return Conflict(new { message = $"Запись за {drilling.Date} уже существует" });
 
-        drilling.Id = 0; // Id назначает база данных, а не клиент
+        drilling.Id = 0; // id ставит база
         _db.DrillingActivities.Add(drilling);
         _db.SaveChanges();
         return CreatedAtAction(nameof(GetById), new { id = drilling.Id }, drilling);
     }
 
-    // PUT api/drilling/5
     [Authorize(Roles = "admin")]
     [HttpPut("{id}")]
     public IActionResult Update(int id, DrillingActivity drilling)
@@ -74,7 +68,6 @@ public class DrillingController : ControllerBase
         return Ok(drilling);
     }
 
-    // DELETE api/drilling/5
     [Authorize(Roles = "admin")]
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)

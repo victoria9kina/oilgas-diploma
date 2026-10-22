@@ -5,7 +5,6 @@ using OilGasApi.Models;
 
 namespace OilGasApi.Controllers;
 
-/// <summary>CRUD добычи по бассейнам и справочник бассейнов. Читать могут все, изменять только admin.</summary>
 [ApiController]
 [Route("api/basins")]
 public class BasinProductionController : ControllerBase
@@ -17,14 +16,12 @@ public class BasinProductionController : ControllerBase
         _db = db;
     }
 
-    // GET api/basins/info: справочник бассейнов с координатами
     [HttpGet("info")]
     public IActionResult GetInfo()
     {
         return Ok(Basins.All);
     }
 
-    // GET api/basins?basin=neuquina&from=2023-01-01&to=2023-12-01  (все параметры необязательные)
     [HttpGet]
     public IActionResult GetAll(string? basin, DateOnly? from, DateOnly? to)
     {
@@ -38,7 +35,6 @@ public class BasinProductionController : ControllerBase
         return Ok(basinProductions);
     }
 
-    // GET api/basins/5
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
     {
@@ -48,7 +44,6 @@ public class BasinProductionController : ControllerBase
         return Ok(basinProduction);
     }
 
-    // POST api/basins
     [Authorize(Roles = "admin")]
     [HttpPost]
     public IActionResult Create(BasinProduction basinProduction)
@@ -58,13 +53,12 @@ public class BasinProductionController : ControllerBase
         if (_db.BasinProductions.Any(b => b.Date == basinProduction.Date && b.Basin == basinProduction.Basin))
             return Conflict(new { message = $"Запись {basinProduction.Basin} за {basinProduction.Date} уже существует" });
 
-        basinProduction.Id = 0; // Id назначает база данных, а не клиент
+        basinProduction.Id = 0; // id ставит база
         _db.BasinProductions.Add(basinProduction);
         _db.SaveChanges();
         return CreatedAtAction(nameof(GetById), new { id = basinProduction.Id }, basinProduction);
     }
 
-    // PUT api/basins/5
     [Authorize(Roles = "admin")]
     [HttpPut("{id}")]
     public IActionResult Update(int id, BasinProduction basinProduction)
@@ -82,7 +76,6 @@ public class BasinProductionController : ControllerBase
         return Ok(basinProduction);
     }
 
-    // DELETE api/basins/5
     [Authorize(Roles = "admin")]
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)

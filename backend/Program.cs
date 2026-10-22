@@ -6,11 +6,10 @@ using OilGasApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// База данных SQLite: файл oilgas.db рядом с приложением
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
-// Проверка JWT-токена: те же Issuer, Audience и ключ, что при выдаче в AuthOptions
+// проверка токена: те же данные, что при его выдаче
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -30,13 +29,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddControllers();
 
-// Разрешаем запросы из Angular-клиента (лаба 3), он работает на порту 4200
+// разрешаем запросы с сайта на angular (лаба 3)
 builder.Services.AddCors(options => options.AddPolicy("angular", policy =>
     policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
-// При запуске создаём БД и заполняем её из CSV, если она пустая
+// при первом запуске создаём базу и загружаем данные из csv
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -45,8 +44,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("angular");
-app.UseAuthentication(); // кто пришёл: читает токен
-app.UseAuthorization();  // можно ли ему сюда: проверяет [Authorize]
+app.UseAuthentication(); // кто пришёл
+app.UseAuthorization();  // можно ли ему сюда
 app.MapControllers();
 
 app.Run();

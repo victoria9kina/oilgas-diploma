@@ -1,9 +1,9 @@
 namespace OilGasApi.Models;
 
-/// <summary>Справочные данные о бассейне. Координаты: примерный центр бассейна, нужны для карты в дипломе.</summary>
 public record BasinInfo(string Code, string Name, string CsvColumn, double Latitude, double Longitude);
 
-/// <summary>Справочник нефтегазовых бассейнов Аргентины. Он не меняется, поэтому хранится в коде, а не в БД.</summary>
+// справочник не меняется, поэтому хранится в коде, а не в базе
+// координаты нужны для карты в дипломе
 public static class Basins
 {
     public static readonly List<BasinInfo> All = new List<BasinInfo>
@@ -15,7 +15,6 @@ public static class Basins
         new BasinInfo("cuyana",   "Куйо",            "cuenca_cuyana",   -33.3, -68.6),
     };
 
-    /// <summary>Найти бассейн по коду. Если такого нет, вернёт null.</summary>
     public static BasinInfo? Find(string code) => All.FirstOrDefault(b => b.Code == code);
 
     public static bool IsKnown(string code) => Find(code) != null;

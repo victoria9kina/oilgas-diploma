@@ -10,7 +10,7 @@ namespace OilGasApi.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    // Учебные пользователи. Пароли открытым текстом допустимы только в лабораторной работе.
+    // учебные пользователи
     private static readonly List<User> Users = new List<User>
     {
         new User { Username = "admin", Password = "admin123", Role = "admin" },
@@ -23,7 +23,6 @@ public class AuthController : ControllerBase
         public string Password { get; set; } = "";
     }
 
-    // POST api/auth/login  { "username": "admin", "password": "admin123" }
     [HttpPost("login")]
     public IActionResult Login(LoginData loginData)
     {
@@ -35,7 +34,6 @@ public class AuthController : ControllerBase
         return Ok(new { token, username = user.Username, role = user.Role });
     }
 
-    // GET api/auth/me: кто я. Удобно проверить, что токен работает.
     [Authorize]
     [HttpGet("me")]
     public IActionResult Me()

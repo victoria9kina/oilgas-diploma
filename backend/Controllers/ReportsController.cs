@@ -5,12 +5,7 @@ using OilGasApi.Models;
 
 namespace OilGasApi.Controllers;
 
-/// <summary>
-/// Сводные отчёты: объединяют данные нескольких классов.
-/// [Authorize] на весь контроллер: без токена ответ 401, с токеном любой роли отчёт доступен.
-/// Отчёты используют вычисляемые свойства моделей (PriceCategory, MetersPerWell и др.),
-/// SQL о них не знает, поэтому таблицы сначала загружаются в память (ToList), а потом объединяются LINQ.
-/// </summary>
+// отчёты только для вошедших пользователей
 [ApiController]
 [Authorize]
 [Route("api/reports")]
@@ -23,8 +18,6 @@ public class ReportsController : ControllerBase
         _db = db;
     }
 
-    // 1. Добыча + цена Brent + бурение по месяцам (Production и DrillingActivity, связь по дате)
-    // GET api/reports/monthly-summary?from=2022-01-01&to=2022-12-01
     [HttpGet("monthly-summary")]
     public IActionResult MonthlySummary(DateOnly? from, DateOnly? to)
     {
@@ -33,11 +26,12 @@ public class ReportsController : ControllerBase
             .ToList();
         var drillings = _db.DrillingActivities.ToList();
 
+        // соединяем добычу и бурение по дате
         var summary = productions
             .Join(drillings,
-                production => production.Date, // по какому полю связываем первую таблицу
-                drilling => drilling.Date,     // и вторую
-                (production, drilling) => new  // что берём из пары
+                production => production.Date,
+                drilling => drilling.Date,
+                (production, drilling) => new
                 {
                     production.Date,
                     production.OilTotal,
@@ -54,8 +48,6 @@ public class ReportsController : ControllerBase
         return Ok(summary);
     }
 
-    // 2. Доли бассейнов за месяц и сравнение с национальной добычей нефти (BasinProduction и Production)
-    // GET api/reports/basin-shares?date=2023-06-01
     [HttpGet("basin-shares")]
     public IActionResult BasinShares(DateOnly date)
     {
@@ -86,8 +78,7 @@ public class ReportsController : ControllerBase
         });
     }
 
-    // 3. Рейтинг бассейнов за год с координатами: основа для карты в дипломе (BasinProduction и справочник Basins)
-    // GET api/reports/top-basins?year=2023
+    // рейтинг бассейнов с координатами: основа карты в дипломе
     [HttpGet("top-basins")]
     public IActionResult TopBasins(int year)
     {
