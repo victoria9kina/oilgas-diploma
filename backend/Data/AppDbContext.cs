@@ -5,6 +5,7 @@ namespace OilGasApi.Data;
 
 public class AppDbContext : DbContext
 {
+    // каждая строка ниже это таблица в базе
     public DbSet<Production> Productions => Set<Production>();
     public DbSet<BasinProduction> BasinProductions => Set<BasinProduction>();
     public DbSet<DrillingActivity> DrillingActivities => Set<DrillingActivity>();

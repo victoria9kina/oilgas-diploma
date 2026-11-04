@@ -12,9 +12,8 @@ public class DrillingActivity
 
     [Range(0, double.MaxValue)] public double MetersDrilled { get; set; }
 
-    [Range(0, int.MaxValue)] public int WellsCompleted { get; set; }
-
-    [Range(0, int.MaxValue)] public int ActiveUnconventionalWells { get; set; }
+    [Range(0, int.MaxValue)] public int WellsCompleted { get; set; } //сколько скважин закончили
+    [Range(0, int.MaxValue)] public int ActiveUnconventionalWells { get; set; }//сколько нетрадиционных скважин работает	
 
     // сколько метров бурения в среднем на одну скважину
     public double MetersPerWell
@@ -27,7 +26,7 @@ public class DrillingActivity
         }
     }
 
-    // категория цены нефти: low до 50 $, medium до 80 $, high от 80 $
+    // категория цены нефти low до 50 medium до 80 high от 80 долларов
     public string PriceCategory
     {
         get

@@ -6,10 +6,11 @@ using OilGasApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// подключаем базу sqlite
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
-// проверка токена: те же данные, что при его выдаче
+// проверяем токен по тем же данным что при его выдаче
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -29,7 +30,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddControllers();
 
-// разрешаем запросы с сайта на angular (лаба 3)
+// разрешаем запросы с сайта на angular для лабы 3
 builder.Services.AddCors(options => options.AddPolicy("angular", policy =>
     policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod()));
 
@@ -49,3 +50,9 @@ app.UseAuthorization();  // можно ли ему сюда
 app.MapControllers();
 
 app.Run();
+
+
+
+
+
+//«Разработка автоматизированной системы прогнозирования и геовизуализации показателей добычи нефти и газа (на основе данных нефтегазовых бассейнов Аргентины)»

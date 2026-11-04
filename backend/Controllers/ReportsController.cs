@@ -7,8 +7,8 @@ namespace OilGasApi.Controllers;
 
 // отчёты только для вошедших пользователей
 [ApiController]
-[Authorize]
-[Route("api/reports")]
+[Authorize]//атрибут для отчетов, чтобы только вошедшие пользователи могли их видеть
+[Route("api/reports")]//3 отчёта
 public class ReportsController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -18,6 +18,7 @@ public class ReportsController : ControllerBase
         _db = db;
     }
 
+    // добыча и бурение по месяцам в одной таблице
     [HttpGet("monthly-summary")]
     public IActionResult MonthlySummary(DateOnly? from, DateOnly? to)
     {
@@ -29,9 +30,9 @@ public class ReportsController : ControllerBase
         // соединяем добычу и бурение по дате
         var summary = productions
             .Join(drillings,
-                production => production.Date,
-                drilling => drilling.Date,
-                (production, drilling) => new
+                production => production.Date, // поле для связи в добыче
+                drilling => drilling.Date, // поле для связи в бурении
+                (production, drilling) => new // что кладём в одну строку отчёта
                 {
                     production.Date,
                     production.OilTotal,
@@ -48,6 +49,7 @@ public class ReportsController : ControllerBase
         return Ok(summary);
     }
 
+    // доля каждого бассейна за один месяц
     [HttpGet("basin-shares")]
     public IActionResult BasinShares(DateOnly date)
     {
@@ -56,6 +58,7 @@ public class ReportsController : ControllerBase
         if (production == null || basinProductions.Count == 0)
             return NotFound(new { message = $"Нет данных за {date}" });
 
+        // сумма всех бассейнов за месяц
         var basinsTotal = basinProductions.Sum(b => b.Value);
 
         var shares = basinProductions
@@ -78,7 +81,7 @@ public class ReportsController : ControllerBase
         });
     }
 
-    // рейтинг бассейнов с координатами: основа карты в дипломе
+    // рейтинг бассейнов за год с координатами для карты в дипломе
     [HttpGet("top-basins")]
     public IActionResult TopBasins(int year)
     {
@@ -93,6 +96,7 @@ public class ReportsController : ControllerBase
         var ranking = Basins.All
             .Select(basin =>
             {
+                // сколько нефти дал этот бассейн за год
                 var basinTotal = yearRecords.Where(b => b.Basin == basin.Code).Sum(b => b.Value);
                 return new
                 {

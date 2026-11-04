@@ -1,8 +1,9 @@
 namespace OilGasApi.Models;
 
+// данные об одном бассейне
 public record BasinInfo(string Code, string Name, string CsvColumn, double Latitude, double Longitude);
 
-// справочник не меняется, поэтому хранится в коде, а не в базе
+// справочник не меняется поэтому хранится в коде а не в базе
 // координаты нужны для карты в дипломе
 public static class Basins
 {

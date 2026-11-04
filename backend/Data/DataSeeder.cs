@@ -7,13 +7,13 @@ public static class DataSeeder
 {
     public static void Seed(AppDbContext db, string csvPath)
     {
-        db.Database.EnsureCreated();
+        db.Database.EnsureCreated(); //чекает есть ли база, если нет, то создает с этими таблицами
 
         if (db.Productions.Any())
             return; // данные уже загружены
 
         var lines = File.ReadAllLines(csvPath);
-        var header = lines[0].Split(',');
+        var header = lines[0].Split(','); // первая строка это названия колонок
 
         foreach (var line in lines.Skip(1))
         {
@@ -49,7 +49,7 @@ public static class DataSeeder
                 Date = date,
                 BrentPrice = ReadNumber(header, cells, "precio_brent"),
                 MetersDrilled = ReadNumber(header, cells, "metros_perforados"),
-                // в csv скважины записаны дробью (40.0), поэтому приводим к int
+                // в csv скважины записаны дробным числом поэтому приводим к int
                 WellsCompleted = (int)ReadNumber(header, cells, "pozos_terminados"),
                 ActiveUnconventionalWells = (int)ReadNumber(header, cells, "pozos_no_conv_activos")
             });
@@ -59,9 +59,10 @@ public static class DataSeeder
         Console.WriteLine($"Импортировано месяцев из CSV: {lines.Length - 1}");
     }
 
+    // ищем колонку по названию и берём из неё число
     private static double ReadNumber(string[] header, string[] cells, string column)
     {
-        // InvariantCulture: точка как десятичный разделитель
+        // InvariantCulture значит что дробь пишется через точку
         int index = Array.IndexOf(header, column);
         return double.Parse(cells[index], CultureInfo.InvariantCulture);
     }

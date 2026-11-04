@@ -6,7 +6,7 @@ using OilGasApi.Models;
 namespace OilGasApi.Controllers;
 
 [ApiController]
-[Route("api/basins")]
+[Route("api/basins")]//CRUD добычи по бассейнам
 public class BasinProductionController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -48,6 +48,7 @@ public class BasinProductionController : ControllerBase
     [HttpPost]
     public IActionResult Create(BasinProduction basinProduction)
     {
+        // такого бассейна нет в справочнике
         if (!Basins.IsKnown(basinProduction.Basin))
             return BadRequest(new { message = $"Неизвестный бассейн {basinProduction.Basin}" });
         if (_db.BasinProductions.Any(b => b.Date == basinProduction.Date && b.Basin == basinProduction.Basin))

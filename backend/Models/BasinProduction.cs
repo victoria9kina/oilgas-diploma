@@ -15,6 +15,6 @@ public class BasinProduction
     // название бассейна по его коду
     public string? BasinName => Basins.Find(Basin)?.Name;
 
-    // доля бассейна от общей суммы, %
+    // доля бассейна от общей суммы в процентах
     public double SharePercentOf(double total) => Percent.Of(Value, total);
 }

@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
+//создание токена
+
 namespace OilGasApi.Auth;
 
 public static class AuthOptions
@@ -11,19 +13,21 @@ public static class AuthOptions
     public const string Audience = "OilGasClient";
     public const int LifetimeInHours = 12;
 
-    // ключ для подписи токена, не короче 32 символов
+    // ключ для подписи токена не короче 32 символов
     private const string Key = "oilgas-diploma-secret-key-0123456789";
 
     public static SymmetricSecurityKey SigningKey => new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Key));
 
     public static string GenerateToken(string username, string role)
     {
+        // в токен записываем имя и роль
         var claims = new List<Claim>
         {
             new Claim(ClaimsIdentity.DefaultNameClaimType, username),
             new Claim(ClaimsIdentity.DefaultRoleClaimType, role)
         };
 
+        // собираем токен кто выдал для кого срок и подпись
         var jwt = new JwtSecurityToken(
             issuer: Issuer,
             audience: Audience,

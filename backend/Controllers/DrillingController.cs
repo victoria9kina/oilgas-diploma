@@ -6,7 +6,7 @@ using OilGasApi.Models;
 namespace OilGasApi.Controllers;
 
 [ApiController]
-[Route("api/drilling")]
+[Route("api/drilling")]//CRUD бурения
 public class DrillingController : ControllerBase
 {
     private readonly AppDbContext _db;
