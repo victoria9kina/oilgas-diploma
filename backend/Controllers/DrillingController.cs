@@ -24,7 +24,7 @@ public class DrillingController : ControllerBase
             .OrderBy(d => d.Date)
             .ToList();
 
-        // категории цены нет в таблице, поэтому фильтруем после ToList
+        // категории цены нет в таблице поэтому фильтруем после ToList
         if (priceCategory != null)
             drillings = drillings.Where(d => d.PriceCategory == priceCategory).ToList();
 

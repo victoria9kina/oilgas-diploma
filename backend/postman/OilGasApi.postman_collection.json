@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "OilGasApi",
-    "description": "Лаба 2: Web API добычи нефти и газа Аргентины. Сначала выполнить папку 1 (токены сохранятся в переменные), потом остальные по порядку или Run collection.",
+    "description": "Web API добычи нефти и газа Аргентины с данными для прогноза. Сначала выполнить папку 1 (токены сохранятся в переменные), потом остальные по порядку или Run collection.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -22,11 +22,19 @@
       "value": ""
     },
     {
-      "key": "basinId",
+      "key": "basinProductionId",
       "value": ""
     },
     {
       "key": "drillingId",
+      "value": ""
+    },
+    {
+      "key": "marketFactorId",
+      "value": ""
+    },
+    {
+      "key": "eventId",
       "value": ""
     }
   ],
@@ -257,6 +265,38 @@
                   "key": "to",
                   "value": "2020-12-01"
                 }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Месяц с максимальной нефтью",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/production/max-oil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "production",
+                "max-oil"
               ]
             },
             "auth": {
@@ -571,10 +611,10 @@
       ]
     },
     {
-      "name": "3. Бассейны (CRUD)",
+      "name": "3. Бассейны (CRUD, внешний ключ)",
       "item": [
         {
-          "name": "Справочник бассейнов",
+          "name": "Таблица бассейнов",
           "request": {
             "method": "GET",
             "header": [],
@@ -611,7 +651,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/basins?basin=neuquina&from=2023-01-01&to=2023-12-01",
+              "raw": "{{baseUrl}}/api/basins?basinId=1&from=2023-01-01&to=2023-12-01",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -621,8 +661,8 @@
               ],
               "query": [
                 {
-                  "key": "basin",
-                  "value": "neuquina"
+                  "key": "basinId",
+                  "value": "1"
                 },
                 {
                   "key": "from",
@@ -682,7 +722,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"neuquina\",\n  \"value\": 1500\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basinId\": 1,\n  \"value\": 1500\n}"
             }
           },
           "event": [
@@ -692,7 +732,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"basinId\", pm.response.json().id);"
+                  "pm.collectionVariables.set(\"basinProductionId\", pm.response.json().id);"
                 ]
               }
             }
@@ -709,14 +749,14 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/basins/{{basinId}}",
+              "raw": "{{baseUrl}}/api/basins/{{basinProductionId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "basins",
-                "{{basinId}}"
+                "{{basinProductionId}}"
               ]
             },
             "auth": {
@@ -731,7 +771,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"neuquina\",\n  \"value\": 1700\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basinId\": 1,\n  \"value\": 1700\n}"
             }
           },
           "event": [
@@ -747,7 +787,7 @@
           ]
         },
         {
-          "name": "Неизвестный бассейн → 400",
+          "name": "Тот же бассейн и месяц → 409",
           "request": {
             "method": "POST",
             "header": [
@@ -778,7 +818,54 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basin\": \"mars\",\n  \"value\": 1500\n}"
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basinId\": 1,\n  \"value\": 1500\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Нет такого бассейна → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/basins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "basins"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"basinId\": 99,\n  \"value\": 1500\n}"
             }
           },
           "event": [
@@ -799,14 +886,14 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/basins/{{basinId}}",
+              "raw": "{{baseUrl}}/api/basins/{{basinProductionId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "basins",
-                "{{basinId}}"
+                "{{basinProductionId}}"
               ]
             },
             "auth": {
@@ -1043,7 +1130,632 @@
       ]
     },
     {
-      "name": "5. Сводные отчёты (нужен токен)",
+      "name": "5. Рыночные факторы (CRUD)",
+      "item": [
+        {
+          "name": "Все месяцы",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Фильтр: 2022 год",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors?from=2022-01-01&to=2022-12-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2022-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2022-12-01"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Создать (admin) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilExportUsdMln\": 500,\n  \"gasExportUsdMln\": 100,\n  \"usdArsRate\": 1500,\n  \"worldOilDemand\": 105\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"marketFactorId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Получить по id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors/{{marketFactorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors",
+                "{{marketFactorId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Изменить (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors/{{marketFactorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors",
+                "{{marketFactorId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilExportUsdMln\": 600,\n  \"gasExportUsdMln\": 100,\n  \"usdArsRate\": 1500,\n  \"worldOilDemand\": 105\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Тот же месяц ещё раз → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"oilExportUsdMln\": 500,\n  \"gasExportUsdMln\": 100,\n  \"usdArsRate\": 1500,\n  \"worldOilDemand\": 105\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Отрицательный курс → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2031-01-01\",\n  \"oilExportUsdMln\": 500,\n  \"gasExportUsdMln\": 100,\n  \"usdArsRate\": -1,\n  \"worldOilDemand\": 105\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Удалить (admin) → 204",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/market-factors/{{marketFactorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "market-factors",
+                "{{marketFactorId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. События (CRUD)",
+      "item": [
+        {
+          "name": "Все события",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Фильтр: события ОПЕК",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events?category=OPEC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "OPEC"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Создать (admin) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"title\": \"Тестовое событие\",\n  \"category\": \"Policy\",\n  \"impact\": 1,\n  \"sourceUrl\": \"\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"eventId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Изменить (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"title\": \"Тестовое событие\",\n  \"category\": \"Policy\",\n  \"impact\": 0,\n  \"sourceUrl\": \"\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Влияние 5 → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2030-01-01\",\n  \"title\": \"Тестовое событие\",\n  \"category\": \"Policy\",\n  \"impact\": 5,\n  \"sourceUrl\": \"\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Удалить (admin) → 204",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Удалённое событие → 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Сводные отчёты (нужен токен)",
       "item": [
         {
           "name": "Добыча + бурение по месяцам",
@@ -1183,11 +1895,60 @@
               }
             }
           ]
+        },
+        {
+          "name": "Датасет для прогноза за 2022",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/forecast-dataset?from=2022-01-01&to=2022-12-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "forecast-dataset"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2022-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2022-12-01"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "6. Разница 401 и 403",
+      "name": "8. Разница 401 и 403",
       "item": [
         {
           "name": "Отчёт без токена → 401",

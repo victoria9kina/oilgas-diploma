@@ -36,12 +36,12 @@ builder.Services.AddCors(options => options.AddPolicy("angular", policy =>
 
 var app = builder.Build();
 
-// при первом запуске создаём базу и загружаем данные из csv
+// при первом запуске создаём базу и загружаем данные из папки Data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var csvPath = Path.Combine(AppContext.BaseDirectory, "Data", "argentina_oil_gas.csv");
-    DataSeeder.Seed(db, csvPath);
+    var dataFolder = Path.Combine(AppContext.BaseDirectory, "Data");
+    DataSeeder.Seed(db, dataFolder);
 }
 
 app.UseCors("angular");

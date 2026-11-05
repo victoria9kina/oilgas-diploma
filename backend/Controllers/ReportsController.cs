@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OilGasApi.Data;
 using OilGasApi.Models;
 
@@ -49,12 +50,56 @@ public class ReportsController : ControllerBase
         return Ok(summary);
     }
 
+    // итоговый датасет для прогноза добыча бурение рынок и события по месяцам
+    [HttpGet("forecast-dataset")]
+    public IActionResult ForecastDataset(DateOnly? from, DateOnly? to)
+    {
+        var productions = _db.Productions
+            .Where(p => (from == null || p.Date >= from) && (to == null || p.Date <= to))
+            .ToList();
+        var drillings = _db.DrillingActivities.ToList();
+        var marketFactors = _db.MarketFactors.ToList();
+        var marketEvents = _db.MarketEvents.ToList();
+
+        var dataset = productions
+            // сначала добыча плюс бурение
+            .Join(drillings,
+                production => production.Date,
+                drilling => drilling.Date,
+                (production, drilling) => new { production, drilling })
+            // потом к ним рыночные факторы
+            .Join(marketFactors,
+                row => row.production.Date,
+                marketFactor => marketFactor.Date,
+                (row, marketFactor) => new
+                {
+                    row.production.Date,
+                    row.production.OilTotal,
+                    row.production.GasTotal,
+                    row.production.OilUnconventionalSharePercent,
+                    row.drilling.BrentPrice,
+                    row.drilling.WellsCompleted,
+                    row.drilling.MetersDrilled,
+                    marketFactor.OilExportUsdMln,
+                    marketFactor.GasExportUsdMln,
+                    marketFactor.UsdArsRate,
+                    marketFactor.WorldOilDemand,
+                    // события этого месяца их может быть несколько
+                    Events = marketEvents.Where(e => e.Date == row.production.Date).Select(e => e.Title).ToList(),
+                    EventsImpact = marketEvents.Where(e => e.Date == row.production.Date).Sum(e => e.Impact)
+                })
+            .OrderBy(row => row.Date)
+            .ToList();
+
+        return Ok(dataset);
+    }
+
     // доля каждого бассейна за один месяц
     [HttpGet("basin-shares")]
     public IActionResult BasinShares(DateOnly date)
     {
         var production = _db.Productions.FirstOrDefault(p => p.Date == date);
-        var basinProductions = _db.BasinProductions.Where(b => b.Date == date).ToList();
+        var basinProductions = _db.BasinProductions.Include(b => b.Basin).Where(b => b.Date == date).ToList();
         if (production == null || basinProductions.Count == 0)
             return NotFound(new { message = $"Нет данных за {date}" });
 
@@ -64,8 +109,8 @@ public class ReportsController : ControllerBase
         var shares = basinProductions
             .Select(b => new
             {
-                b.Basin,
-                b.BasinName,
+                b.BasinId,
+                BasinName = b.Basin?.Name,
                 b.Value,
                 SharePercent = b.SharePercentOf(basinsTotal)
             })
@@ -93,11 +138,11 @@ public class ReportsController : ControllerBase
 
         var yearTotal = yearRecords.Sum(b => b.Value);
 
-        var ranking = Basins.All
+        var ranking = _db.Basins.ToList()
             .Select(basin =>
             {
                 // сколько нефти дал этот бассейн за год
-                var basinTotal = yearRecords.Where(b => b.Basin == basin.Code).Sum(b => b.Value);
+                var basinTotal = yearRecords.Where(b => b.BasinId == basin.Id).Sum(b => b.Value);
                 return new
                 {
                     basin.Code,

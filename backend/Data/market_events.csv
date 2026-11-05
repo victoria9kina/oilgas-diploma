@@ -1,0 +1,27 @@
+date,title,category,impact,source_url
+2009-01-01,Мировой финансовый кризис и падение спроса на нефть,Crisis,-1,https://en.wikipedia.org/wiki/Great_Recession
+2011-02-01,Гражданская война в Ливии и Brent выше 100 долларов,War,1,https://en.wikipedia.org/wiki/2011_Libyan_civil_war
+2012-05-01,Закон 26.741 и национализация 51% YPF,Policy,-1,https://www.diariodecuyo.com.ar/noticias/el-gobierno-oficializo-la-ley-de-expropiacion-de-ypf-767946.html
+2013-07-01,Договор YPF и Chevron по Loma Campana в Vaca Muerta,Policy,1,https://mase.lmneuquen.com/ypf/a-ocho-anos-del-contrato-ypf-chevron-que-cambio-la-historia-n826266
+2014-10-01,Закон 27.007 о сланцевой добыче,Policy,1,https://www.marval.com/publicacion/el-congreso-nacional-sanciono-la-ley-que-modifica-la-ley-de-hidrocarburos-11875
+2014-11-01,ОПЕК не сокращает добычу и цена падает,OPEC,-1,https://en.wikipedia.org/wiki/2010s_oil_glut
+2015-12-01,Отмена валютных ограничений и девальвация песо,Currency,0,https://www.minutouno.com/economia/primer-dia-cepo-cambiario-como-fue-la-devaluacion-el-fin-2015-n6134365
+2016-12-01,Соглашение ОПЕК+ о сокращении добычи,OPEC,1,https://www.offshore-energy.biz/opec-and-non-opec-oil-production-cuts-reach-an-impressive-level
+2017-03-01,Резолюция 46/2017 о цене на сланцевый газ Неукена,Policy,1,https://webiis08.mondaq.com/argentina/oil-gas-electricity/581014/stimulus-program-for-investments-in-vaca-muerta-gas-production
+2018-05-01,Валютный кризис и программа МВФ,Currency,-1,https://en.wikipedia.org/wiki/2018_Argentine_monetary_crisis
+2018-05-01,Возобновление экспорта газа,Policy,1,https://apis.datos.gob.ar/series/api/series/?ids=75.3_GPOH_0_M_32
+2019-08-01,Обвал песо после праймериз и заморозка цены нефти,Policy,-1,https://www3.hcdn.gob.ar/dependencias/dcomisiones/periodo-142/142-20.pdf
+2020-03-01,Пандемия COVID-19 и карантин в Аргентине,Pandemic,-1,https://en.wikipedia.org/wiki/COVID-19_pandemic_in_Argentina
+2020-03-01,Ценовая война России и Саудовской Аравии,OPEC,-1,https://en.wikipedia.org/wiki/2020_Russia%E2%80%93Saudi_Arabia_oil_price_war
+2020-05-01,Рекордное сокращение добычи ОПЕК+,OPEC,1,https://maritime-executive.com/article/opec-agrees-biggest-output-cut-ever
+2020-05-01,Указ 488/2020 barril criollo с ценой 45 долларов,Policy,1,https://www.marval.com/publicacion/hidrocarburos-gobierno-decreto-el-barril-criollo-13677
+2020-11-01,Указ 892/2020 Plan Gas.Ar,Policy,1,https://www.marval.com/Publicacion/plan-gas-2020-2024-13860
+2022-02-01,Начало специальной военной операции в Украине и рост цены нефти,War,1,https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine
+2022-12-01,Эмбарго ЕС на российскую нефть и потолок цены,Sanctions,0,https://www.intellinews.com/eu-g7-approve-russian-oil-price-cap-as-embargo-on-country-s-crude-comes-into-force-264282
+2023-07-01,Запуск газопровода Néstor Kirchner из Vaca Muerta,Pipeline,1,https://www.ogj.com/general-interest/article/14297665/argentina-inaugurates-president-nstor-kirchner-gas-pipeline
+2023-12-01,Правительство Милея и девальвация песо,Currency,0,https://www.vozdeamerica.com/a/milei-devalua-peso-reduce-subsidios-paquete-economico-neutralizar-crisis/7395525.html
+2024-07-01,Закон 27.742 Ley Bases и режим RIGI,Policy,1,https://www.ey.com/es_ar/technical/law/ey-law-alerts-argentina/rigi-decreto-749-2024
+2025-03-01,Нефтепровод Duplicar Plus на полную мощность,Pipeline,1,https://ogj.com/pipelines-transportation/pipelines/article/55305378/oldelval-launches-duplicar-norte-to-expand-transport-capacity-in-argentinas-vaca-muerta
+2025-04-01,Отмена большинства валютных ограничений,Currency,0,https://www.trade.gov/market-intelligence/argentina-eliminates-capital-controls-and-payment-timelines
+2025-04-01,ОПЕК+ начинает наращивать добычу,OPEC,-1,https://www.rigzone.com/news/opec_countries_will_start_unwinding_2mm_bpd_cut_from_april-04-mar-2025-179811-article/
+2025-10-01,Выборы в Конгресс Аргентины и скачки курса,Currency,0,https://en.wikipedia.org/wiki/2025_Argentine_legislative_election
