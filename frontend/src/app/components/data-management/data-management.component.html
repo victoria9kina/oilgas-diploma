@@ -1,0 +1,29 @@
+<section class="page">
+  <div class="page-title"><div><span class="kicker">УПРАВЛЕНИЕ ДАННЫМИ</span><h1>Месячная добыча</h1><p>Просмотр, поиск и изменение записей API.</p></div>@if (auth.role() === 'admin') { <button class="primary" (click)="cancelEdit()">+ Добавить запись</button> }</div>
+  <div class="toolbar"><input type="month" aria-label="Поиск по месяцу" (input)="query.set($any($event.target).value)"/><button (click)="sortAscending.set(!sortAscending())">Дата {{ sortAscending() ? '↑' : '↓' }}</button><button (click)="view.set('table')" [class.selected]="view() === 'table'">Таблица</button><button (click)="view.set('cards')" [class.selected]="view() === 'cards'">Карточки</button></div>
+  @if (message()) { <p class="message" [class.success]="messageType() === 'success'">{{ message() }}</p> }
+  @if (auth.role() === 'admin') {
+    <form class="edit-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <h2>{{ editing() ? 'Редактирование записи' : 'Новая запись' }}</h2>
+      <label>Месяц<input type="month" formControlName="date"/>@if (showError('date')) { <small class="field-error">{{ fieldError('date') }}</small> }</label>
+      <label>Обычная нефть, м³<input type="number" min="0" formControlName="oilConventional"/>@if (showError('oilConventional')) { <small class="field-error">{{ fieldError('oilConventional') }}</small> }</label>
+      <label>Shale нефть, м³<input type="number" min="0" formControlName="oilShale"/>@if (showError('oilShale')) { <small class="field-error">{{ fieldError('oilShale') }}</small> }</label>
+      <label>Tight нефть, м³<input type="number" min="0" formControlName="oilTight"/>@if (showError('oilTight')) { <small class="field-error">{{ fieldError('oilTight') }}</small> }</label>
+      <label>Обычный газ, тыс. м³<input type="number" min="0" formControlName="gasConventional"/>@if (showError('gasConventional')) { <small class="field-error">{{ fieldError('gasConventional') }}</small> }</label>
+      <label>Shale газ, тыс. м³<input type="number" min="0" formControlName="gasShale"/>@if (showError('gasShale')) { <small class="field-error">{{ fieldError('gasShale') }}</small> }</label>
+      <label>Tight газ, тыс. м³<input type="number" min="0" formControlName="gasTight"/>@if (showError('gasTight')) { <small class="field-error">{{ fieldError('gasTight') }}</small> }</label>
+      <div><button class="primary" type="submit" [disabled]="saving()">{{ saving() ? 'Сохранение...' : 'Сохранить' }}</button><button type="button" (click)="cancelEdit()" [disabled]="saving()">Отмена</button></div>
+    </form>
+  } @else { <p class="hint">Изменять данные может администратор. Для проверки формы войди под <b>admin / admin123</b>.</p> }
+  @if (loading()) {
+    <div class="data-state"><span class="spinner"></span>Загружаем данные из API...</div>
+  } @else if (loadError()) {
+    <div class="data-state error-state"><span>{{ loadError() }}</span><button type="button" (click)="load()">Повторить</button></div>
+  } @else if (visibleRows().length === 0) {
+    <div class="data-state">{{ query() ? 'По выбранному месяцу ничего не найдено.' : 'API не вернул записей о добыче.' }}</div>
+  } @else if (view() === 'table') {
+    <div class="table-wrap"><table><thead><tr><th>Месяц</th><th>Нефть, м³</th><th>Газ, тыс. м³</th><th>Shale + tight, %</th>@if (auth.role() === 'admin') { <th></th> }</tr></thead><tbody>@for (row of visibleRows(); track row.id) { <tr><td>{{ row.date | date:'LLLL y':'':'ru' }}</td><td>{{ number(row.oilTotal) }}</td><td>{{ number(row.gasTotal) }}</td><td>{{ row.oilUnconventionalSharePercent | number:'1.0-1' }}%</td>@if (auth.role() === 'admin') { <td><button (click)="startEdit(row)">Изменить</button></td> }</tr> }</tbody></table></div>
+  } @else {
+    <div class="cards">@for (row of visibleRows(); track row.id) { <article><small>{{ row.date | date:'LLLL y':'':'ru' }}</small><strong>{{ number(row.oilTotal) }} <em>м³ нефти</em></strong><span>{{ number(row.gasTotal) }} тыс. м³ газа</span>@if (auth.role() === 'admin') { <button (click)="startEdit(row)">Изменить</button> }</article> }</div>
+  }
+</section>

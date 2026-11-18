@@ -1,0 +1,178 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/" aria-label="OilScope, главная">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" role="img"><path d="M16 4c-5 6-8 10-8 15a8 8 0 0 0 16 0c0-5-3-9-8-15Z" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M11 20c1.7 2.6 4.4 3.6 7.3 2.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.4"/></svg></span>
+      <span class="brand-name">oil<span>scope</span></span>
+    </a>
+
+    <div class="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div>
+    <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="nav-icon">▦</span>Обзор</a>
+    <a class="nav-link" routerLink="/data" routerLinkActive="active"><span class="nav-icon">▤</span>Данные</a>
+    <a class="nav-link" routerLink="/login" routerLinkActive="active"><span class="nav-icon">◉</span>Вход</a>
+
+    <div class="sidebar-bottom">
+      <div class="api-status" [class.online]="apiStatus() === 'online'" [class.offline]="apiStatus() === 'offline'"><span class="status-dot"></span><div><strong>Источник данных</strong><small>{{ apiStatus() === 'online' ? 'API доступен' : apiStatus() === 'offline' ? 'API недоступен' : 'Проверяем API...' }}</small></div></div>
+      <div class="sidebar-foot">ДИПЛОМНЫЙ ПРОЕКТ<br />Аргентина · нефть и газ</div>
+    </div>
+  </aside>
+
+  <main class="main-content" id="top">
+    <header class="topbar">
+      <div class="crumb">Аналитика <span>/</span> <strong>Обзор добычи</strong></div>
+      <div class="topbar-right">
+        <span class="live-label" [class.online]="apiStatus() === 'online'" [class.offline]="apiStatus() === 'offline'"><i></i>{{ apiStatus() === 'online' ? 'API ДОСТУПЕН' : apiStatus() === 'offline' ? 'API НЕДОСТУПЕН' : 'ПРОВЕРКА API' }}</span>
+        @if (auth.username()) {
+          <div class="user-info"><span class="avatar">{{ auth.username().slice(0, 2).toUpperCase() }}</span><span><strong>{{ auth.username() }}</strong><small>{{ auth.role() === 'admin' ? 'Администратор' : 'Пользователь' }}</small></span><button type="button" (click)="logout()">Выйти</button></div>
+        } @else {
+          <span class="guest-label">Гость</span>
+        }
+      </div>
+    </header>
+
+    @if (isDashboard()) {
+    <section class="page-heading" id="overview">
+      <div>
+        <div class="eyebrow">ЭНЕРГЕТИЧЕСКИЙ ОБЗОР · АРГЕНТИНА</div>
+        <h1>Добыча нефти и газа</h1>
+        <p class="subtitle">Исторические показатели, активность бассейнов и изменение добычи</p>
+      </div>
+      <div class="period-control">
+        <label>ПЕРИОД</label>
+        <div class="date-inputs">
+          <input aria-label="Начало периода" type="month" [ngModel]="fromMonth()" (ngModelChange)="fromMonth.set($event)" />
+          <span>—</span>
+          <input aria-label="Конец периода" type="month" [ngModel]="toMonth()" (ngModelChange)="toMonth.set($event)" />
+          <button type="button" (click)="loadDashboard()" [disabled]="loading()">Показать</button>
+        </div>
+      </div>
+    </section>
+
+    @if (errorMessage()) {
+      <div class="alert"><span>!</span><div><strong>Не удалось загрузить показатели</strong><p>{{ errorMessage() }}</p></div><button (click)="loadDashboard()">Повторить</button></div>
+    }
+
+    @if (loading()) {
+      <div class="loading-card"><span class="spinner"></span>Загружаем месячные данные из API…</div>
+    }
+
+    <section class="metric-grid" aria-label="Основные показатели">
+      <article class="metric-card oil-card">
+        <div class="metric-top"><span class="metric-icon oil-icon">◉</span><span class="metric-label">НЕФТЬ ЗА МЕСЯЦ</span><span class="metric-period">{{ formatMonth(latest()?.date) }}</span></div>
+        <div class="metric-value">{{ formatNumber(latest()?.oilTotal) }} <small>м³</small></div>
+        <div class="metric-foot"><span class="trend" [class.negative]="(oilChangePercent() ?? 0) < 0">{{ oilChangePercent() == null ? '—' : ((oilChangePercent() ?? 0) >= 0 ? '↗ ' : '↘ ') + formatPercent(oilChangePercent()) }}</span><span>за выбранный период</span></div>
+        <div class="metric-decoration oil-decoration"></div>
+      </article>
+
+      <article class="metric-card gas-card">
+        <div class="metric-top"><span class="metric-icon gas-icon">⌁</span><span class="metric-label">ГАЗ ЗА МЕСЯЦ</span><span class="metric-period">{{ formatMonth(latest()?.date) }}</span></div>
+        <div class="metric-value">{{ formatNumber(latest()?.gasTotal) }} <small>тыс. м³</small></div>
+        <div class="metric-foot"><span class="neutral-chip">ИСТОРИЧЕСКИЕ ДАННЫЕ</span><span>{{ productions().length }} месяцев</span></div>
+        <div class="metric-decoration gas-decoration"></div>
+      </article>
+
+      <article class="metric-card shale-card">
+        <div class="metric-top"><span class="metric-icon shale-icon">◈</span><span class="metric-label">НЕТРАДИЦИОННАЯ НЕФТЬ</span><span class="metric-period">{{ formatMonth(latest()?.date) }}</span></div>
+        <div class="metric-value">{{ formatPercent(latest()?.oilUnconventionalSharePercent ?? null) }}</div>
+        <div class="metric-foot"><span class="neutral-chip">SHALE + TIGHT</span><span>доля от общего объёма</span></div>
+        <div class="metric-decoration shale-decoration"></div>
+      </article>
+    </section>
+
+    <section class="content-grid" id="production">
+      <article class="panel production-panel">
+        <div class="panel-heading">
+          <div><div class="section-kicker">ДИНАМИКА</div><h2>Добыча по месяцам</h2><p>Нефть и газ показаны на отдельных шкалах</p></div>
+        </div>
+        @if (productions().length > 1) {
+          <div class="charts-stack">
+            <section class="series-chart">
+              <div class="series-heading"><span class="legend-oil"></span><strong>Нефть</strong><small>м³</small></div>
+              <div class="chart-wrap">
+                <div class="chart-labels"><span>{{ formatNumber(chartMaximum('oilTotal')) }}</span><span>0</span></div>
+                <svg class="line-chart" viewBox="0 0 900 250" preserveAspectRatio="none" role="img" aria-label="График добычи нефти в кубометрах">
+                  <defs><linearGradient id="oilFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#c76538" stop-opacity=".2"/><stop offset="1" stop-color="#c76538" stop-opacity="0"/></linearGradient></defs>
+                  <path [attr.d]="chartAreaPath('oilTotal')" class="area oil-area" />
+                  <path [attr.d]="chartPath('oilTotal')" class="chart-line oil-line" />
+                  <line x1="0" y1="62" x2="900" y2="62" class="grid-line"/><line x1="0" y1="125" x2="900" y2="125" class="grid-line"/><line x1="0" y1="188" x2="900" y2="188" class="grid-line"/>
+                </svg>
+                <div class="chart-axis"><span>{{ formatMonth(firstMonth()?.date) }}</span><span>{{ formatMonth(latest()?.date) }}</span></div>
+              </div>
+            </section>
+            <section class="series-chart">
+              <div class="series-heading"><span class="legend-gas"></span><strong>Газ</strong><small>тыс. м³</small></div>
+              <div class="chart-wrap">
+                <div class="chart-labels"><span>{{ formatNumber(chartMaximum('gasTotal')) }}</span><span>0</span></div>
+                <svg class="line-chart" viewBox="0 0 900 250" preserveAspectRatio="none" role="img" aria-label="График добычи газа в тысячах кубометров">
+                  <defs><linearGradient id="gasFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#597f77" stop-opacity=".15"/><stop offset="1" stop-color="#597f77" stop-opacity="0"/></linearGradient></defs>
+                  <path [attr.d]="chartAreaPath('gasTotal')" class="area gas-area" />
+                  <path [attr.d]="chartPath('gasTotal')" class="chart-line gas-line" />
+                  <line x1="0" y1="62" x2="900" y2="62" class="grid-line"/><line x1="0" y1="125" x2="900" y2="125" class="grid-line"/><line x1="0" y1="188" x2="900" y2="188" class="grid-line"/>
+                </svg>
+                <div class="chart-axis"><span>{{ formatMonth(firstMonth()?.date) }}</span><span>{{ formatMonth(latest()?.date) }}</span></div>
+              </div>
+            </section>
+          </div>
+        } @else {
+          <div class="empty-chart">Для графика выберите период минимум из двух месяцев.</div>
+        }
+        <div class="chart-note"><span class="note-dot"></span>Источник: Argentina Oil &amp; Gas Dataset · {{ productions().length }} месячных записей</div>
+      </article>
+
+      <article class="panel basin-panel" id="basins">
+        <div class="panel-heading basin-heading">
+          <div><div class="section-kicker">ГЕОГРАФИЯ</div><h2>Нефтяные бассейны</h2><p>Добыча за выбранный период</p></div>
+          <span class="basin-count">{{ basins().length }} регионов</span>
+        </div>
+        <div class="map-area">
+          <svg class="argentina-map" viewBox="0 0 280 390" role="img" aria-label="Схема расположения нефтяных бассейнов Аргентины">
+            <path class="country-shape" d="M83 15 L135 21 L158 37 L178 41 L190 62 L184 83 L203 103 L193 126 L204 145 L191 167 L195 188 L179 212 L184 233 L167 255 L171 276 L157 300 L160 319 L146 343 L141 365 L128 381 L119 360 L114 337 L104 317 L106 294 L94 273 L99 249 L88 225 L94 202 L81 180 L90 158 L77 137 L84 115 L72 94 L82 71 L72 50 Z" />
+            @for (basin of basins(); track basin.id) {
+              <g class="map-marker">
+                <circle [attr.cx]="mapX(basin)" [attr.cy]="mapY(basin)" [attr.r]="bubbleRadius(basin)" />
+                <title>{{ basin.name }}: {{ formatNumber(basin.production) }} м³</title>
+              </g>
+            }
+          </svg>
+          <div class="map-caption"><span class="map-key"></span>Размер круга показывает объём добычи</div>
+        </div>
+        <div class="basin-list">
+          @for (basin of basins(); track basin.id) {
+            <div class="basin-row">
+              <span class="basin-rank">{{ $index + 1 }}</span>
+              <span class="basin-name">{{ basin.name }}</span>
+              <span class="basin-share">{{ formatPercent(basin.sharePercent) }}</span>
+              <div class="basin-bar"><i [style.width.%]="basin.sharePercent"></i></div>
+              <span class="basin-volume">{{ formatNumber(basin.production) }} м³</span>
+            </div>
+          } @empty {
+            <div class="empty-basins">Нет данных о бассейнах за этот период.</div>
+          }
+        </div>
+      </article>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading table-heading">
+        <div><div class="section-kicker">ПО МЕСЯЦАМ</div><h2>Последние показатели</h2><p>Национальная добыча и доля shale + tight</p></div>
+        <span class="table-range">{{ productions().length }} записей</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>МЕСЯЦ</th><th>НЕФТЬ, м³</th><th>ГАЗ, тыс. м³</th><th>НЕТРАДИЦИОННАЯ НЕФТЬ</th><th>ДОЛЯ SHALE + TIGHT</th></tr></thead>
+          <tbody>
+            @for (row of productions().slice(-8).reverse(); track row.id) {
+              <tr><td class="month-cell">{{ formatMonth(row.date) }}</td><td>{{ formatNumber(row.oilTotal) }}</td><td>{{ formatNumber(row.gasTotal) }}</td><td><span class="volume-pill">{{ formatNumber(row.oilUnconventional) }} м³</span></td><td><div class="share-cell"><span>{{ formatPercent(row.oilUnconventionalSharePercent) }}</span><div class="mini-bar"><i [style.width.%]="row.oilUnconventionalSharePercent"></i></div></div></td></tr>
+            } @empty {
+              <tr><td colspan="5" class="empty-table">Нет записей за выбранный период.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    } @else {
+      <router-outlet />
+    }
+    <footer class="footer"><span>OILSCOPE <b>·</b> АНАЛИТИЧЕСКАЯ СИСТЕМА</span><span>Учебный проект · данные Аргентины · 2009–2025</span></footer>
+  </main>
+</div>
